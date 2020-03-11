@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Photobooth</title>
+    </head>
+
+    <body>
+        <video id="video" width="640" height="480" autoplay></video>
+        <button onclick="connecttousb()" id="snap">connect to arduino</button>
+        <canvas id="canvas" width="640" height="480"></canvas>
+        <script>
+            var video = document.getElementById('video');
+
+            // Get access to the camera!
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Not adding `{ audio: true }` since we only want video now
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                    //video.src = window.URL.createObjectURL(stream);
+                    video.srcObject = stream;
+                    video.play();
+                });
+            }
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+            var video = document.getElementById('video');
+            let = cantakepicture = true;
+            // Trigger photo take
+            document.getElementById("snap").addEventListener("click", function () {
+                context.drawImage(video, 0, 0, 640, 480);
+            });
+            let writer = null;
+            function takepicture() {
+                cantakepicture = false;
+                context.drawImage(video, 0, 0, 640, 480);
+                setTimeout(function () {
+                    cantakepicture = true
+                }, 100);
+            }
+            async function connecttousb() {
+                const port = await navigator.serial.requestPort();
+
+                await port.open({
+                    baudrate: 9600
+                });
+
+                const reader = port.readable.getReader();
+                while (true) {
+                    const message = await reader.read();
+                    console.log(message);
+                    if (message && cantakepicture) {
+                        takepicture();
+                    }
+                }
+                console.log(port);
+            }
+        </script>
+    </body>
+
+</html>
